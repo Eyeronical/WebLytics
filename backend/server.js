@@ -10,17 +10,16 @@ const app = express();
 app.use(helmet());
 
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', '*');
-  res.header('Access-Control-Allow-Headers', '*');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
 
   next();
 });
-
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -36,8 +35,8 @@ const analyzeLimiter = rateLimit({
   max: 50,
   message: { error: 'Too many analysis requests, please wait before trying again.' }
 });
-
 app.use('/api/analyze', analyzeLimiter);
+
 app.use('/api', websiteRoutes);
 
 app.get('/', (req, res) => {
@@ -45,7 +44,7 @@ app.get('/', (req, res) => {
     message: 'WebVision API',
     version: '1.0.0',
     status: 'active',
-    cors: 'disabled'
+    cors: 'enabled (allow all)'
   });
 });
 
@@ -71,5 +70,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`🚀 WebVision API server running on port ${PORT} (CORS disabled)`); 
+  console.log(`🚀 WebVision API server running on port ${PORT} (CORS allow all)`); 
 });
