@@ -9,23 +9,32 @@ const app = express();
 
 app.use(helmet());
 
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'false');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
-  message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false
+  message: { error: 'Too many requests, please try again later.' }
 });
 app.use(limiter);
 
 const analyzeLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 50,
-  message: { error: 'Too many analysis requests, please wait before trying again.' },
-  standardHeaders: true,
-  legacyHeaders: false
+  message: { error: 'Too many analysis requests, please wait before trying again.' }
 });
 
 app.use('/api/analyze', analyzeLimiter);
@@ -36,47 +45,31 @@ app.get('/', (req, res) => {
     message: 'WebVision API',
     version: '1.0.0',
     status: 'active',
-    environment: process.env.NODE_ENV || 'development',
-    endpoints: ['/api/analyze', '/api/websites', '/api/stats', '/health']
+    cors: 'disabled'
   });
 });
 
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    timestamp: new Date().toISOString()
   });
 });
 
 app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Endpoint not found',
-    path: req.path,
-    method: req.method
-  });
+  res.status(404).json({ error: 'Endpoint not found' });
 });
 
 app.use((err, req, res, next) => {
-  console.error('Server Error:', {
-    message: err.message,
-    stack: err.stack,
-    url: req.url,
-    method: req.method,
-    timestamp: new Date().toISOString()
-  });
-  
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  res.status(err.status || 500).json({ 
+  console.error('Server Error:', err);
+  res.status(500).json({ 
     error: 'Internal Server Error',
-    message: isProduction ? 'Something went wrong' : err.message,
+    message: err.message,
     timestamp: new Date().toISOString()
   });
 });
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`🚀 WebVision API server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🚀 WebVision API server running on port ${PORT} (CORS disabled)`);
 });
