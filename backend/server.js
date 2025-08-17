@@ -25,14 +25,14 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000,  
   max: 200,
   message: { error: 'Too many requests, please try again later.' }
 });
 app.use(limiter);
 
 const analyzeLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
+  windowMs: 5 * 60 * 1000, 
   max: 50,
   message: { error: 'Too many analysis requests, please wait before trying again.' }
 });
@@ -71,5 +71,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`🚀 WebVision API server running on port ${PORT} (CORS disabled)`);
+  console.log(`🚀 WebVision API server running on port ${PORT} (CORS disabled)`); 
 });
