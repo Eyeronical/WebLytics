@@ -12,13 +12,16 @@ app.use(helmet());
 
 const corsOptions = {
   origin: [
-    'http://localhost:5173',
-    'https://weblytics-lyart.vercel.app/' 
+    'http://localhost:5173', 
+    'https://weblytics-lyart.vercel.app'
   ],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
+
 
 app.use(express.json({ limit: '10mb' }));
 
