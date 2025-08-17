@@ -12,21 +12,23 @@ app.use(helmet());
 
 const corsOptions = {
   origin: [
-    'http://localhost:5173', 
+    'http://localhost:5173',
     'https://weblytics-lyart.vercel.app'
   ],
   credentials: true,
-  optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 };
+
 app.use(cors(corsOptions));
 
+app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
+  windowMs: 15 * 60 * 1000,
   max: 200,
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true,
@@ -35,8 +37,8 @@ const limiter = rateLimit({
 app.use(limiter);
 
 const analyzeLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, 
-  max: 50, 
+  windowMs: 5 * 60 * 1000,
+  max: 50,
   message: { error: 'Too many analysis requests, please wait before trying again.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -87,16 +89,6 @@ app.use((err, req, res, next) => {
     message: isProduction ? 'Something went wrong' : err.message,
     timestamp: new Date().toISOString()
   });
-});
-
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
 });
 
 const PORT = process.env.PORT || 5001;
