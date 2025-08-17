@@ -10,41 +10,40 @@ const app = express();
 app.use(helmet());
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
-
   next();
 });
 
 app.use(express.json({ limit: '10mb' }));
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  
+  windowMs: 15 * 60 * 1000,
   max: 200,
   message: { error: 'Too many requests, please try again later.' }
 });
 app.use(limiter);
 
 const analyzeLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, 
+  windowMs: 5 * 60 * 1000,
   max: 50,
   message: { error: 'Too many analysis requests, please wait before trying again.' }
 });
-app.use('/api/analyze', analyzeLimiter);
 
+app.use('/api/analyze', analyzeLimiter);
 app.use('/api', websiteRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'WebVision API',
+    message: 'WebLytics API',
     version: '1.0.0',
     status: 'active',
-    cors: 'enabled (allow all)'
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -70,5 +69,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`🚀 WebVision API server running on port ${PORT} (CORS allow all)`); 
+  console.log(`🚀 WebLytics API running on port ${PORT}`);
 });
