@@ -7,21 +7,20 @@ const websiteRoutes = require('./src/routes/websiteRoutes');
 
 const app = express();
 
-app.use(helmet());
+app.set('trust proxy', 1);
 
+app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', 'https://weblytics-lyart.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
   next();
 });
-
 
 const analyzeLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -41,7 +40,7 @@ app.use(limiter);
 app.use('/api', websiteRoutes);
 
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'WebLytics API',
     version: '1.0.0',
     status: 'active',
@@ -50,8 +49,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString()
   });
 });
@@ -62,7 +61,7 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Internal Server Error',
     message: err.message,
     timestamp: new Date().toISOString()
