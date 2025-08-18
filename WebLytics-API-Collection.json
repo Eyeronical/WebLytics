@@ -260,7 +260,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "https://webvision.onrender.com",
+      "value": "https://weblytics.onrender.com",
       "type": "string",
       "description": "Base URL for WebLytics API (Production)"
     },
