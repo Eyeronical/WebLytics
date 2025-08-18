@@ -17,12 +17,11 @@ async function analyzeAndStore(url) {
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
         'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
+        'Pragma': 'no-cache'
       }
     });
 
     const $ = cheerio.load(response.data);
-
     const brand = extractBrandName($, url);
     const rawDesc = extractDescription($);
     const favicon = extractFavicon($, url);
@@ -75,12 +74,10 @@ function extractBrandName($, url) {
     if (ogSiteName && typeof ogSiteName === 'string' && ogSiteName.trim().length > 0) {
       return ogSiteName.trim();
     }
-
     const appName = $('meta[name="application-name"]').attr('content');
     if (appName && typeof appName === 'string' && appName.trim().length > 0) {
       return appName.trim();
     }
-
     const ogTitle = $('meta[property="og:title"]').attr('content');
     if (ogTitle && typeof ogTitle === 'string' && ogTitle.trim().length > 0) {
       let cleanTitle = ogTitle.trim();
@@ -93,7 +90,6 @@ function extractBrandName($, url) {
       }
       return cleanTitle.substring(0, 50);
     }
-
     const titleText = $('title').text() || '';
     if (titleText.trim().length > 0) {
       let cleanTitle = titleText.trim();
@@ -115,12 +111,10 @@ function extractBrandName($, url) {
       }
       return cleanTitle.substring(0, 50);
     }
-
     const h1Text = $('h1').first().text() || '';
     if (h1Text.trim().length > 0) {
       return h1Text.trim().substring(0, 50);
     }
-
     try {
       const hostname = new URL(url).hostname.replace(/^www\./, '');
       const domainParts = hostname.split('.');
@@ -150,22 +144,18 @@ function extractDescription($) {
     if (metaDesc && typeof metaDesc === 'string' && metaDesc.trim().length > 0) {
       return metaDesc.trim();
     }
-
     const ogDesc = $('meta[property="og:description"]').attr('content');
     if (ogDesc && typeof ogDesc === 'string' && ogDesc.trim().length > 0) {
       return ogDesc.trim();
     }
-
     const twitterDesc = $('meta[name="twitter:description"]').attr('content');
     if (twitterDesc && typeof twitterDesc === 'string' && twitterDesc.trim().length > 0) {
       return twitterDesc.trim();
     }
-
     const firstP = $('p').first().text();
     if (firstP && typeof firstP === 'string' && firstP.trim().length > 0) {
       return firstP.trim().substring(0, 200);
     }
-
     return 'No description available';
   } catch (error) {
     return 'No description available';
@@ -176,8 +166,7 @@ function extractFavicon($, url) {
   try {
     const favicon = $('link[rel="icon"]').attr('href') ||
       $('link[rel="shortcut icon"]').attr('href') ||
-      $('link[rel="apple-touch-icon"]').attr('href') ||
-      '/favicon.ico';
+      $('link[rel="apple-touch-icon"]').attr('href') || '/favicon.ico';
     return new URL(favicon, url).href;
   } catch {
     return null;
@@ -212,44 +201,25 @@ async function getAll(page = 1, limit = 10, search = '') {
     .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
-
   if (search) {
     query = query.or(`brand_name.ilike.%${search}%,description.ilike.%${search}%,url.ilike.%${search}%`);
   }
-
   const { data, error, count } = await query;
   if (error) throw new Error(error.message);
-
   return {
     data,
-    pagination: {
-      page,
-      limit,
-      total: count,
-      pages: Math.ceil(count / limit)
-    }
+    pagination: { page, limit, total: count, pages: Math.ceil(count / limit) }
   };
 }
 
 async function getById(id) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select()
-    .eq('id', id)
-    .single();
-
+  const { data, error } = await supabase.from(TABLE).select().eq('id', id).single();
   if (error && error.code !== 'PGRST116') throw new Error(error.message);
   return data;
 }
 
 async function update(id, values) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update({ ...values, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single();
-
+  const { data, error } = await supabase.from(TABLE).update({ ...values, updated_at: new Date().toISOString() }).eq('id', id).select().single();
   if (error) throw new Error(error.message);
   return data;
 }
@@ -261,36 +231,18 @@ async function remove(id) {
 
 async function getStats() {
   try {
-    const { count: totalWebsites } = await supabase
-      .from(TABLE)
-      .select('*', { count: 'exact', head: true });
-
-    const { data: allSites } = await supabase
-      .from(TABLE)
-      .select('url, brand_name, created_at')
-      .order('created_at', { ascending: false })
-      .limit(1);
-
+    const { count: totalWebsites } = await supabase.from(TABLE).select('*', { count: 'exact', head: true });
+    const { data: allSites } = await supabase.from(TABLE).select('url, brand_name, created_at').order('created_at', { ascending: false }).limit(1);
     let mostRecent = null;
     let lastAdded = null;
-
     if (allSites && allSites.length > 0) {
       const latest = allSites[0];
       mostRecent = latest.brand_name || new URL(latest.url).hostname.replace(/^www\./, '');
       lastAdded = latest.created_at;
     }
-
-    return {
-      totalWebsites: totalWebsites || 0,
-      mostRecent: mostRecent,
-      lastAdded: lastAdded
-    };
+    return { totalWebsites: totalWebsites || 0, mostRecent: mostRecent, lastAdded: lastAdded };
   } catch (error) {
-    return {
-      totalWebsites: 0,
-      mostRecent: null,
-      lastAdded: null
-    };
+    return { totalWebsites: 0, mostRecent: null, lastAdded: null };
   }
 }
 
