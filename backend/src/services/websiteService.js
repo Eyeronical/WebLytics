@@ -36,21 +36,22 @@ async function analyzeAndStore(url) {
 
     const { data, error } = await supabase
       .from(TABLE)
-      .insert([{
-        url,
-        brand_name: brand,
-        description: rawDesc,
-        ai_description: aiDesc,
-        favicon_url: favicon,
-        keywords: keywords,
-        language: language,
-        status: 'active'
-      }])
-      .select()
-      .single();
+      .insert([
+        {
+          url,
+          brand_name: brand,
+          description: rawDesc,
+          ai_description: aiDesc,
+          favicon_url: favicon,
+          keywords: keywords,
+          language: language,
+          status: 'active'
+        }
+      ])
+      .select();
 
     if (error) throw new Error(error.message);
-    return data;
+    return data[0];
   } catch (error) {
     if (error.code === 'ECONNABORTED') {
       throw new Error('Request timeout - website took too long to respond');
@@ -118,7 +119,7 @@ function extractBrandName($, url) {
     try {
       const hostname = new URL(url).hostname.replace(/^www\./, '');
       const domainParts = hostname.split('.');
-      let siteName = domainParts[0];
+      let siteName = domainParts;
       siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1);
       const specialCases = {
         'youtube': 'YouTube',
@@ -166,7 +167,8 @@ function extractFavicon($, url) {
   try {
     const favicon = $('link[rel="icon"]').attr('href') ||
       $('link[rel="shortcut icon"]').attr('href') ||
-      $('link[rel="apple-touch-icon"]').attr('href') || '/favicon.ico';
+      $('link[rel="apple-touch-icon"]').attr('href') ||
+      '/favicon.ico';
     return new URL(favicon, url).href;
   } catch {
     return null;
@@ -213,19 +215,30 @@ async function getAll(page = 1, limit = 10, search = '') {
 }
 
 async function getById(id) {
-  const { data, error } = await supabase.from(TABLE).select().eq('id', id).single();
-  if (error && error.code !== 'PGRST116') throw new Error(error.message);
+  const { data, error } = await supabase.from(TABLE).select().eq('id', parseInt(id)).single();
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null;
+    }
+    throw new Error(error.message);
+  }
   return data;
 }
 
 async function update(id, values) {
-  const { data, error } = await supabase.from(TABLE).update({ ...values, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({ ...values, updated_at: new Date().toISOString() })
+    .eq('id', parseInt(id))
+    .select();
+  
   if (error) throw new Error(error.message);
-  return data;
+  if (!data || data.length === 0) throw new Error('Website not found');
+  return data[0];
 }
 
 async function remove(id) {
-  const { error } = await supabase.from(TABLE).delete().eq('id', id);
+  const { error } = await supabase.from(TABLE).delete().eq('id', parseInt(id));
   if (error) throw new Error(error.message);
 }
 
