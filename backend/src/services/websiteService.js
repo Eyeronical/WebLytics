@@ -8,7 +8,7 @@ const TABLE = 'Nurdd';
 
 async function analyzeAndStore(url) {
   try {
-    const response = await axios.get(url, { 
+    const response = await axios.get(url, {
       timeout: 15000,
       maxRedirects: 5,
       headers: {
@@ -37,9 +37,9 @@ async function analyzeAndStore(url) {
 
     const { data, error } = await supabase
       .from(TABLE)
-      .insert([{ 
-        url, 
-        brand_name: brand, 
+      .insert([{
+        url,
+        brand_name: brand,
         description: rawDesc,
         ai_description: aiDesc,
         favicon_url: favicon,
@@ -97,16 +97,12 @@ function extractBrandName($, url) {
     const titleText = $('title').text() || '';
     if (titleText.trim().length > 0) {
       let cleanTitle = titleText.trim();
-      
-      // Handle YouTube specifically
       if (url.includes('youtube.com')) {
         cleanTitle = cleanTitle.replace(' - YouTube', '').trim();
         if (cleanTitle.length > 0) {
           return cleanTitle.substring(0, 50);
         }
       }
-      
-      // Handle other sites with common separators
       const separators = [' - ', ' | ', ' :: ', ' • ', ' — ', ' – ', ' on ', ' at '];
       for (const sep of separators) {
         if (cleanTitle.includes(sep)) {
@@ -117,7 +113,6 @@ function extractBrandName($, url) {
           }
         }
       }
-      
       return cleanTitle.substring(0, 50);
     }
 
@@ -126,32 +121,25 @@ function extractBrandName($, url) {
       return h1Text.trim().substring(0, 50);
     }
 
-    // Extract domain name as fallback
     try {
       const hostname = new URL(url).hostname.replace(/^www\./, '');
       const domainParts = hostname.split('.');
-      let siteName = domainParts;
-      
-      // Capitalize first letter
+      let siteName = domainParts[0];
       siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1);
-      
-      // Handle special cases
       const specialCases = {
         'youtube': 'YouTube',
-        'facebook': 'Facebook', 
+        'facebook': 'Facebook',
         'twitter': 'Twitter',
         'instagram': 'Instagram',
         'linkedin': 'LinkedIn',
         'reddit': 'Reddit',
         'github': 'GitHub'
       };
-      
       return specialCases[siteName.toLowerCase()] || siteName;
     } catch {
       return 'Website';
     }
   } catch (error) {
-    console.error('Error extracting brand name:', error);
     return 'Website';
   }
 }
@@ -180,7 +168,6 @@ function extractDescription($) {
 
     return 'No description available';
   } catch (error) {
-    console.error('Error extracting description:', error);
     return 'No description available';
   }
 }
@@ -188,10 +175,9 @@ function extractDescription($) {
 function extractFavicon($, url) {
   try {
     const favicon = $('link[rel="icon"]').attr('href') ||
-                    $('link[rel="shortcut icon"]').attr('href') ||
-                    $('link[rel="apple-touch-icon"]').attr('href') ||
-                    '/favicon.ico';
-    
+      $('link[rel="shortcut icon"]').attr('href') ||
+      $('link[rel="apple-touch-icon"]').attr('href') ||
+      '/favicon.ico';
     return new URL(favicon, url).href;
   } catch {
     return null;
@@ -212,9 +198,9 @@ function extractKeywords($) {
 
 function extractLanguage($) {
   try {
-    return $('html').attr('lang') || 
-           $('meta[http-equiv="content-language"]').attr('content') || 
-           'en';
+    return $('html').attr('lang') ||
+      $('meta[http-equiv="content-language"]').attr('content') ||
+      'en';
   } catch {
     return 'en';
   }
@@ -251,7 +237,7 @@ async function getById(id) {
     .select()
     .eq('id', id)
     .single();
-  
+
   if (error && error.code !== 'PGRST116') throw new Error(error.message);
   return data;
 }
@@ -263,7 +249,7 @@ async function update(id, values) {
     .eq('id', id)
     .select()
     .single();
-  
+
   if (error) throw new Error(error.message);
   return data;
 }
@@ -300,7 +286,6 @@ async function getStats() {
       lastAdded: lastAdded
     };
   } catch (error) {
-    console.error('Error fetching stats:', error);
     return {
       totalWebsites: 0,
       mostRecent: null,
